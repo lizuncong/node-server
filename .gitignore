@@ -1,0 +1,9 @@
+.idea
+
+node_modules
+
+dist
+dll
+
+.npm
+.DS_Store
