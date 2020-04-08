@@ -33,6 +33,7 @@ const getCookieExpires = () => {
 
 // 统一的登录验证
 const loginCheck = (req) => {
+  // 白名单，绕过登录验证
   const whiteList = ['/api/user/login']
 
   if(whiteList.indexOf(req.path) === -1 && !req.session.username){
@@ -50,15 +51,14 @@ const loginCheck = (req) => {
 const server = http.createServer(async (req, res) => {
 
   accessLog(`${req.method}--${req.url}--${req.headers['user-agent']}--${Date.now()}`)
-  // console.log('process.env.NODE_ENV:', process.env.NODE_ENV)
 
   // 设置返回格式为JSON
   // 在原生的node开发中，res.end返回的永远都是字符串，但是可以通过res.setHeader('Content-type', 'application/json')
   // 设置返回的数据格式，客户端拿到返回结果会根据返回的数据格式解析数据
   res.setHeader('Content-type', 'application/json')
+
   const url = req.url
   req.path = url.split('?')[0]
-  console.log('in...', req.path)
   req.query = querystring.parse(url.split('?')[1])
 
   req.cookie = {}
@@ -112,9 +112,7 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
-  const body = await bodyParser(req)
-
-  req.body = body
+  req.body = await bodyParser(req)
 
   if(needSetCookie){
     // httpOnly：只允许后端修改，不允许前端修改

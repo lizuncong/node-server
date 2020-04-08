@@ -101,11 +101,11 @@ http {
     select username, nickname from users where username='zhangsan';delete from users;-- and password='123456'
     整个用户表就被删除了
     因此为了安全起见，要用mysql提供的escape函数转译一下username和password等外部传入的变量
+
+
 2.XSS攻击：比如在前端网页新建产品时，需要输入产品名称，产品详情，如果用户在输入产品名称时，输入<script>alert(1)</script>
     如果后端拿到这个输入，不做任何转译，直接将<script>alert(1)</script>存入数据库，当前端网页再次获取产品名称时，拿到的将是
     <script>alert(1)</script>，这时候在前端页面就会执行这段js脚本，会直接弹出弹框。
     为了防止xss攻击，可以使用xss这个工具，在后端取到值时，先用xss转译一下再存入数据库
     
-
-
 3.密码加密
