@@ -1,6 +1,6 @@
 const crypto = require('crypto')
-
-const SECRET_KEY = 'li_zun_cong'
+const config = require('../config')
+const SECRET_KEY = config.CRYPTO_SECRET_KEY
 
 const cryp = (content) => {
   const str = `content=${content}&key=${SECRET_KEY}`

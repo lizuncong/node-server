@@ -1,10 +1,8 @@
 const { login } = require('../controller/user')
 
-const handleUserRouter = (req, res) => {
-  const method = req.method
-
+const handleUserRouter = (req) => {
   const path = req.path
-  if(method === 'GET' && path === '/api/user/login'){
+  if(req.method === 'GET' && path === '/api/user/login'){
     const { username, password } = req.query
     return login(username, password, req)
   }

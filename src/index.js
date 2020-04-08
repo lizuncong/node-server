@@ -43,67 +43,40 @@ const loginCheck = (req) => {
   }
 }
 
-// 直接这么设置session数据，session会存在nodejs进程中，会存在以下问题：
-// 1.进程内存有限，如果访问量过大，session过大，导致内存暴增。
-// 2.线上环境，是多进程的，进程之间无法共享内存
-// const SESSION_DATA = {}
 
 const server = http.createServer(async (req, res) => {
 
   accessLog(`${req.method}--${req.url}--${req.headers['user-agent']}--${Date.now()}`)
 
-  // 设置返回格式为JSON
-  // 在原生的node开发中，res.end返回的永远都是字符串，但是可以通过res.setHeader('Content-type', 'application/json')
-  // 设置返回的数据格式，客户端拿到返回结果会根据返回的数据格式解析数据
   res.setHeader('Content-type', 'application/json')
 
-  const url = req.url
-  req.path = url.split('?')[0]
-  req.query = querystring.parse(url.split('?')[1])
+  const urlSplitData = req.url.split('?')
+  req.path = urlSplitData[0]
+  req.query = querystring.parse(urlSplitData[1])
 
+  // 解析cookie
   req.cookie = {}
   const cookie = req.headers.cookie || ''
   cookie && cookie.split(';').forEach(item => {
     const arr = item.split('=')
     const key = arr[0].trim()
-    const val = arr[1].trim()
-    req.cookie[key] = val
+    req.cookie[key] = arr[1].trim()
   })
 
-  // 解析session，使用nodejs本地变量SESSION_DATA
-  // let needSetCookie = false
-  // let token = req.cookie.mt_token
-  //
-  // if(token){
-  //   if(!SESSION_DATA[token]){
-  //     SESSION_DATA[token] = {}
-  //   }
-  // } else {
-  //   needSetCookie = true
-  //   token = `${Date.now()}_${Math.random()}`
-  //   SESSION_DATA[token] = {}
-  // }
-  //
-  // req.session = SESSION_DATA[token]
 
-  // 解析session，使用redis
-  let needSetCookie = false
-  let token = req.cookie.mt_token
-  if(!token){
-    needSetCookie = true
-    token = `${Date.now()}_${Math.random()}`
-    set(token, {})
+  // 获取session数据
+  let sessionId = req.cookie.sessionId
+  if(!sessionId){
+    sessionId = `${Date.now()}_${Math.random()}`
+    res.setHeader('Set-Cookie', `sessionId=${sessionId};path=/;httpOnly;expires=${getCookieExpires()}`)
   }
-
-  req.sessionId = token
-
-  const sessionData = await get(req.sessionId)
-  if(sessionData === null){
+  req.sessionId = sessionId
+  req.session = await get(req.sessionId)
+  if(req.session === null){
     set(req.sessionId, {})
     req.session = {}
-  } else {
-    req.session = sessionData
   }
+
 
   // 登录验证
   const loginStatus = loginCheck(req)
@@ -114,18 +87,13 @@ const server = http.createServer(async (req, res) => {
 
   req.body = await bodyParser(req)
 
-  if(needSetCookie){
-    // httpOnly：只允许后端修改，不允许前端修改
-    res.setHeader('Set-Cookie', `mt_token=${token};path=/;httpOnly;expires=${getCookieExpires()}`)
-  }
-
-  const productData = await handleProductRouter(req, res)
+  const productData = await handleProductRouter(req)
   if(productData){
     res.end(JSON.stringify(productData))
     return
   }
 
-  const userData = await handleUserRouter(req, res)
+  const userData = await handleUserRouter(req)
   if(userData){
     res.end(JSON.stringify(userData))
     return
