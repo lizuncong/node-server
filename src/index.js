@@ -1,13 +1,15 @@
 const http = require('http')
 const querystring = require('querystring')
 const { get, set } = require('./redis')
-const { accessLog } = require('./utils/log')
+const { log } = require('./utils/log')
+const { dateFormat } = require('./utils/tools')
 const handleProductRouter = require('./router/product')
 const handleUserRouter = require('./router/user')
 
 
+// 只解析content-type为application/json类型的数据
 const bodyParser = (req) => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if(req.method !== 'POST'){
       return resolve({})
     }
@@ -25,6 +27,7 @@ const bodyParser = (req) => {
   })
 }
 
+// cookie过期时间
 const getCookieExpires = () => {
   const d = new Date()
   d.setTime(d.getTime() + (24 * 60 * 60 * 1000))
@@ -46,7 +49,7 @@ const loginCheck = (req) => {
 
 const server = http.createServer(async (req, res) => {
 
-  accessLog(`${req.method}--${req.url}--${req.headers['user-agent']}--${Date.now()}`)
+  log(`${dateFormat(new Date, 'YYYY-MM-DD HH:mm:ss')}: ${req.url}--${req.headers['user-agent']}`)
 
   res.setHeader('Content-type', 'application/json')
 
@@ -99,9 +102,7 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
-  res.writeHead(404, { "Content-type": "text/plain" })
-  res.write("404 Not Found\n")
-  res.end()
+  res.end('404 Not Found!')
 
 })
 

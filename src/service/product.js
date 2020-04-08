@@ -1,15 +1,15 @@
-const { querySQL } = require('../database/index')
+const { querySQL, escape } = require('../database/index')
 
 const getProductListService = (productName, keyword) => {
   let sql = `select * from products where 1=1 `
   if(productName){
-    sql += `and name='${productName}' `
+    productName = escape(productName)
+    sql += `and name=${productName} `
   }
   if(keyword){
     sql += `and description like '%${keyword}%' `
   }
   sql += `order by createtime desc;`
-
   return querySQL(sql)
 }
 

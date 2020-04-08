@@ -1,26 +1,24 @@
 const fs = require('fs')
 const path = require('path')
+const { dateFormat } = require('./tools')
 
-const writeLog = (writeStream, log) => {
-  writeStream.write(log + '\n')
-}
+const log = (content) => {
+  const currentDate = new Date();
+  const year = currentDate.getFullYear()
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0')
+  const dir = path.join(__dirname, '../', '../', 'log', `/${year}-${month}`)
+  if(!fs.existsSync(dir)){
+    fs.mkdirSync(dir, { recursive: true })
+  }
 
-const createWriteStream = (fileName) => {
-  const to = path.join(__dirname, '../', '../', 'log', fileName)
-  return writeStream = fs.createWriteStream(to, {
+  const fileName = dir + `/${dateFormat(currentDate)}.log`
+  const writeStream = fs.createWriteStream(fileName, {
     flags: 'a'
   })
-}
-
-
-// 访问日志
-const accessWriteStream = createWriteStream('access.log')
-
-
-const accessLog = (log) => {
-  writeLog(accessWriteStream, log)
+  writeStream.write(content + '\n', 'UTF8')
+  writeStream.end()
 }
 
 module.exports = {
-  accessLog
+  log
 }

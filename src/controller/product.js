@@ -1,12 +1,14 @@
 const resultVoUtil = require('../utils/resultVoUtil')
+const ProductVo = require('../vo/product')
 const {
   getProductListService,
   createProductService,
 } = require('../service/product')
 
 const getProductList = async (productName, keyword) => {
-  const result = await getProductListService(productName, keyword)
-  return resultVoUtil.success(result)
+  const products = await getProductListService(productName, keyword)
+  const voList = products.map(pro => new ProductVo(pro))
+  return resultVoUtil.success(voList)
 }
 
 const createProduct = async (productData) => {
